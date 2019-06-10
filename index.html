@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>d3js Heat Map</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href='styles.css'>
+    <script src="https://d3js.org/d3.v5.js"></script>
+  </head>
+  <body>
+    <div id="holder" class='visual'>
+
+    </div>
+  </body>
+  <script>
+      /* MAP */
+      const url = 'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json'
+      const margin = {
+          top: 70,
+          right: -1200,
+          bottom: -245,
+          left: 140
+      }
+      const h = 350 - margin.top - margin.bottom;
+      const w = 500 - margin.left - margin.right;
+      const padding = 200;
+      const barWidth = '5px';
+      const barHeight = '30px';
+
+      req = new XMLHttpRequest();
+      req.open('GET',url)
+      req.send();
+      req.onload=function(){
+        json=JSON.parse(req.responseText)
+        
+        // Declare initial variables
+        const baseTemperature = json.baseTemperature;
+        let temperatures = json.monthlyVariance;
+
+        // get dates parsed into object for each data point
+        for (i=0; i<temperatures.length; i++) {
+            temperatures[i].month = new Date(1970, temperatures[i].month - 1)
+        }
+
+        const colors = ["#313695","#4575b4","#74add1", "#abd9e9", "#e0f3f8","#ffffbf", "#fee090", "#fdae61", "#f46d43", "#d73027", "#a50026"
+        ]
+
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+        // set color for each date
+        // based temp 8.66
+        const colorBrewer = function(d) {
+            let baseTemp = 8.66
+            let adjustedTemp = baseTemp + d.variance;
+            if (adjustedTemp > 12.8) {
+                return colors[10];
+            }
+            else if (adjustedTemp > 11.7){
+                return colors[9];
+            }
+            else if (adjustedTemp > 10.6){
+                return colors[8];
+            }
+            else if (adjustedTemp > 9.5)
+            {
+                return colors[7];
+            }
+            else if (adjustedTemp > 8.3)
+            {
+                return colors[6];
+            }
+            else if (adjustedTemp > 7.2)
+            {
+                return colors[5];
+            }
+            else if (adjustedTemp >
+            6.1)
+            {
+                return colors[4];
+            }
+            else if (adjustedTemp > 5.0) 
+            {
+                return colors[3];
+            }
+            else if (adjustedTemp > 3.9)
+            {
+                return colors[2];
+            }
+            else if (adjustedTemp > 2.8)
+            {
+                return colors[1];
+            }
+            else {
+                return colors[0]
+            }
+        }
+
+        // Min and Max variables for yAxis
+        const yearMin = d3.min(temperatures, function(d){
+            return d.year;
+        })
+        const yearMax = d3.max(temperatures, function(d){
+            return d.year;
+        })
+
+
+
+        // initialize scale
+        const x = d3.scaleLinear()
+            .range([0, w-padding])
+            .domain([yearMin, yearMax])
+        
+        const y = d3.scaleTime()
+            .range([0, h-padding])
+            .domain(d3.extent(temperatures, 
+            function(d) {
+                return d.month
+            }))
+
+        const timeFormat = d3.timeFormat('%B');
+        var parsedDate;
+
+
+        // declare axes
+        const xAxis = d3.axisBottom(x)
+            .tickFormat(d3.format('d'));
+        const yAxis = d3.axisLeft(y)
+            .tickFormat(timeFormat)
+
+
+        // declare svg
+        const svg = d3.select('.visual')
+            .append('svg')
+            .attr('width', w)
+            .attr('height', h)
+            .classed('svg-content', true)
+            .append('g')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+        // declare tooltip
+        const tooltip = d3.select('.visual')
+            .append('div')
+            .attr('id','tooltip')
+            .style('opacity',0)
+            
+        // declare rectangles 
+        svg.selectAll('rect')
+            .data(temperatures)
+            .enter()
+            .append('rect')
+            .attr('x', function(d,i) {
+                return x(d.year);
+            })
+            .attr('y', function(d,i) {
+                return y(d.month);
+            })
+            .attr('class', 'rectangles')
+            .attr('width', barWidth)
+            .attr('height', barHeight)
+            .attr('fill',function(d) {
+                return colorBrewer(d);
+            })
+            .on('mouseover', function(d,i) {
+                tooltip.transition()
+                    .duration(50)
+                    .style('opacity','.7')
+                    .style('left',d3.event.pageX - 75 + 'px')
+                    .style('top',d3.event.pageY - 65 + 'px')
+                    tooltip.html(d.year + ' - ' + months[d.month.getMonth()] + '<br/>' + (Math.round((baseTemperature - d.variance)*10)/10) + '°C' + '<br/>' + Math.round(d.variance*10)/10 + '°C')
+            })
+            .on('mouseout', function(d,i) {
+                tooltip.transition()
+                    .duration(100)
+                    .style('opacity','0')
+            })
+
+        // Add in text
+        svg.append('text')
+            .text('Monthly Global Land-Surface Temperature')
+            .attr('class','heading')
+            .attr('x',600)
+            .attr('y',-40)
+
+        svg.append('text')
+            .text('1753 - 2015: Base Temperature 8.66°C')
+            .attr('class','subHeading')
+            .attr('x',600)
+            .attr('y',-20)
+
+        svg.append('text')
+            .text('Year')
+            .attr('class','axesTitle')
+            .attr('x',550)
+            .attr('y',410)
+
+        svg.append('text')
+            .text('Month')
+            .attr('class','axesTitle')
+            .attr('transform','rotate(270)')
+            .attr('x',-90)
+            .attr('y',-100)
+
+        // add in axes
+        svg.append('g')
+            .attr('transform', 'translate(0,' + (h/1.477)  + ')')
+            .call(xAxis)
+            .attr('class','axes')
+
+        svg.append('g')
+            .call(yAxis)
+            .attr('class','axes')
+            .attr('transform','translate(0,0)')
+
+        /* LEGEND */
+        const legendMargin = {
+            top: 50,
+            right: 0,
+            bottom: 0,
+            left: 0 
+        }
+        const legendHeight = 150 - legendMargin.top - legendMargin.bottom;
+        const legendWidth = 600 - legendMargin.left - legendMargin.right;
+        const legendPadding = 0;
+        const legendBarHeight = '20px';
+        const threshold = d3.scaleThreshold()
+            .domain([2.8, 3.9, 5.0, 6.1, 7.2, 8.3, 9.5, 10.6, 11.7, 12.8])
+            .range(colors)
+        const thresholdMin = d3.min(temperatures, function(d){
+            return Math.round((baseTemperature + d.variance)*10)/10;
+        })
+        const thresholdMax = d3.max(temperatures, function(d){
+            return Math.round((baseTemperature + d.variance)*10)/10;
+        })
+        const xLegend = d3.scaleLinear()
+            .domain([thresholdMin,thresholdMax])
+            .range([0, 560])
+        const xAxisLegend = d3.axisBottom(xLegend)
+            .tickValues(threshold.domain())
+            .tickFormat(function(d) {return d + '°C'})
+
+        const svgLegend = d3.select('.visual')
+            .append('svg')
+            .attr('class','svgLegend')
+            .attr('width', legendWidth)
+            .attr('height', legendHeight)
+            .classed('svg-content', true)
+            .attr('transform','translate(140,-10)')
+            .append('g')
+            .attr('class','legend')
+
+        const g = d3.select('.legend')
+            .append('g')
+            .call(xAxisLegend)
+            .attr('transform', 'translate(' + legendMargin.left + ',' + legendMargin.top + ')');
+
+        g.selectAll('rect')
+            .data(threshold.range().map(function(color) {
+                var d = threshold.invertExtent(color);
+                if (d[0] == null) d[0] = xLegend.domain()[0];
+                if (d[1] == null) d[1] = xLegend.domain()[1];
+                return d;
+            }))
+            .enter().insert('rect','.tick')
+                .attr('x',function(d) {return xLegend(d[0]); })
+                .attr('width', function(d) { return xLegend(d[1]) - xLegend(d[0]);})
+                .attr('class','rect')
+                .attr('height',45)
+                .attr('fill',function(d){return threshold(d[0]);})
+                .attr('transform','translate(.5,-45)')
+        g.selectAll('.tick')
+            .attr('margin-top','50px')
+
+      }
+
+  </script>
+</html>

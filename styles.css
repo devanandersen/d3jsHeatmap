@@ -1,0 +1,79 @@
+* {
+    margin: 0;
+    padding: 0;
+    overflow: scroll;
+}
+body {
+    background: white;
+    height: 95vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#holder {
+    width: auto;
+    height: 670px;
+    border: 1px solid black;
+    border-radius: 2px;
+    padding: 20px;
+    margin: 40px;
+}
+
+.rectangles {
+    stroke: black;
+    stroke-width: .1px;
+}
+
+.rectangles:hover {
+    stroke-width: .5px;
+}
+
+.axes {
+    font-size: 20px;
+}
+
+.axesTitle{
+    font-size: 23px;
+    font-weight: bold;
+    text-anchor: middle;
+}
+
+#tooltip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    text-align: center;
+    overflow: contain;
+    background: black;
+    color: white;
+    width: 150px;
+    height: auto;
+    padding: 2px;
+    font-size: 13px;
+    font-weight: bold;
+    box-shadow: 1px 1px 10px;
+    border: 1px black solid;
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.heading {
+    font-size: 25px;
+    text-anchor: middle;
+}
+
+.subHeading {
+    text-anchor: middle;
+}
+
+.rect{
+    stroke: black;
+    stroke-width: 1px;
+}
+
+.tick{
+    font-weight: bold;
+    font-size: 14px;
+}
